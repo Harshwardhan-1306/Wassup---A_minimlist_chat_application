@@ -6,6 +6,10 @@ export const signup = async (req, res) => {
     try {
         const { email, fullname, password } = req.body;
         // Validate input
+        if(!email || !fullname || !password) {
+            return res.status(400).json({ message: "Please fill all the fields." });
+        }
+
         if(password.length < 6) {
             return res.status(400).json({ message: "Password must be at least 6 characters long." });
         }
@@ -28,9 +32,8 @@ export const signup = async (req, res) => {
 
         if(newUser) {
             //jwt token
-            generateToken(newUser._id, res);
             await newUser.save();
-
+            generateToken(newUser._id, res);
            res.status(201).json({
             _id: newUser._id,
             fullname: newUser.fullname,
@@ -49,10 +52,46 @@ export const signup = async (req, res) => {
     }
 };
 
-export const login = (req, res) => {
-    res.send("login routes");
+export const login = async(req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if(!user) return res.status(400).json({ message: "Invalid Credentials"});
+
+        const isPass = await bcrypt.compare(password, user.password);
+
+        if(!isPass) {
+            return res.status(400).json({ message: "Invalid Credentials"});
+        }
+
+        generateToken(user._id, res);
+
+        res.status(200).json({ 
+            _id: user._id,
+            fullname: user.fullname,
+            email: user.email,
+            profilepic: user.profilepic
+        });
+
+
+    } catch(error) {
+        console.log("Error in Login controller", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 };
 
 export const logout = (req, res) => {
-    res.send("logout routes");
+    try {
+        res.cookie("jwt", "", { maxAge: 0 });
+        res.status(200).json({ message: "Logged off Successfully"});
+    } catch (error) {
+        console.log("Error in Logout controller", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const updateProfile = async (req, res) => {
+
 };
