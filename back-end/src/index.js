@@ -8,10 +8,11 @@ import { connectDB } from './lib/db.js';
 import cookieParser from 'cookie-parser';
 
 const app = express();
+app.use(express.json({ limit: '2mb' }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: 'https://ubiquitous-pancake-pj9r56wqj4gxh6pqg-5173.app.github.dev/',
+    origin: 'https://ubiquitous-pancake-pj9r56wqj4gxh6pqg-5173.app.github.dev',
     credentials: true
 }));
 
