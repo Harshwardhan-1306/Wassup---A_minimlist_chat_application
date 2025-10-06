@@ -3,11 +3,14 @@ import 'dotenv/config.js';
 import authRoutes from "./routes/auth.route.js"
 import messageRoutes from "./routes/message.route.js"
 import cors from 'cors';
+import { server, app } from './lib/socket.js';
+import path from 'path';
 
 import { connectDB } from './lib/db.js';
 import cookieParser from 'cookie-parser';
 
-const app = express();
+const __dirname = path.resolve();
+
 app.use(express.json({ limit: '2mb' }));
 app.use(express.json());
 app.use(cookieParser());
@@ -19,7 +22,15 @@ app.use(cors({
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-app.listen(process.env.PORT, () => {
+if(process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../front-end/disk')));
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../front-end', 'dist', 'index.html'));
+    })
+}
+
+server.listen(process.env.PORT, () => {
     console.log(`Server listening on port ${process.env.PORT}`);
     connectDB();
 });
